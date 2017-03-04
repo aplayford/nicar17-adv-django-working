@@ -16,6 +16,10 @@ Including another URLconf
 from django.conf.urls import url
 from django.contrib import admin
 
+from calls.views import EmployeeListView,EmployeeDetailView
+
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
+    url(r'^employees/$', EmployeeListView.as_view()),
+    url(r'^employees/(?P<pk>[0-9]+)/$', EmployeeDetailView.as_view())
 ]

@@ -1,27 +1,48 @@
 from django.core.management.base import BaseCommand, CommandError
-from polls.models import Question as Poll
+
+from calls.models import PhoneCall, Employee
+
+import csv, datetime
+
+import pytz
+
 
 class Command(BaseCommand):
-    help = 'Closes the specified poll for voting'
-
-    # def add_arguments(self, parser):
-    #     parser.add_argument('poll_id', nargs='+', type=int)
+    help = 'Load data'
 
     def handle(self, *args, **options):
-        with open('calls.csv') as csvfile:
-            reader = csv.DictReader(csvfile)
-           
-            for row in reader:
-                for key, val in rows:
-                    pass
+        with open("data/employees_parks.csv") as csvfile:
+            employee_reader = csv.DictReader(csvfile)
 
-        # for poll_id in options['poll_id']:
-        #     try:
-        #         poll = Poll.objects.get(pk=poll_id)
-        #     except Poll.DoesNotExist:
-        #         raise CommandError('Poll "%s" does not exist' % poll_id)
+            for row in employee_reader:
+                employee = Employee()
+                employee.name = row['Name']
+                employee.business_title = row['business_title']
+                employee.department = row['department/org_chart']
+                employee.extension = row['extension']
+                employee.save()
 
-        #     poll.opened = False
-        #     poll.save()
+        with open('data/calls_parks.csv') as csvfile:
+            call_reader = csv.DictReader(csvfile)
 
-        #     self.stdout.write(self.style.SUCCESS('Successfully closed poll "%s"' % poll_id))
+            for row in call_reader:
+                call = PhoneCall()
+                call.extension = row['extension']
+                call.phone_number = row['phone_number']
+                
+                # Create the call
+                call_date, call_time = row['call_date_time'].split(' ')
+                call_month, call_day, call_year = call_date.split('/')
+                call_year = "20%s" % call_year
+                call_hour, call_minute = call_time.split(":")
+
+                call.call_date_time = datetime.datetime(
+                    int(call_year), int(call_month), int(call_day),
+                    int(call_hour), int(call_minute),
+                    tzinfo = pytz.timezone('US/Eastern')
+                )
+
+                call.duration_in_seconds = row['duration_in_seconds']
+                call.inbound = True if row['inbound'] == "TRUE" else False
+                call.save()
+
